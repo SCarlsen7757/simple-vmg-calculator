@@ -33,7 +33,7 @@ export function calculateVmg(a: Dataset, b: Dataset): VmgResult {
 
   const diff = progressB - progressA;
   const advantage = Math.abs(diff);
-  const base = Math.max(progressA, progressB) - advantage;
+  const base = Math.min(progressA, progressB);
   const improvementPct = base > 0 ? (advantage / base) * 100 : 0;
 
   let winner: VmgResult['winner'];
