@@ -14,6 +14,17 @@ function fmt(n: number, decimals = 2): string {
   return n.toFixed(decimals);
 }
 
+function routeFromHash(hash: string): string {
+  const [rawRoute] = hash.split('?');
+  const route = rawRoute || '#/';
+
+  if (route === '#') {
+    return '#/';
+  }
+
+  return route.replace(/\/+$/, '') || '#/';
+}
+
 // ── InputCard ─────────────────────────────────────────────────────────────────
 
 interface InputCardProps {
@@ -256,37 +267,21 @@ function ResultsBanner({
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [path, setPath] = useState(window.location.pathname);
+  const [path, setPath] = useState(() => routeFromHash(window.location.hash));
 
   useEffect(() => {
-    const handleLocationChange = () => {
-      setPath(window.location.pathname);
+    const handleHashChange = () => {
+      setPath(routeFromHash(window.location.hash));
     };
 
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-
-    window.history.pushState = function(state, unused, url) {
-      originalPushState.call(this, state, unused, url);
-      handleLocationChange();
-    };
-
-    window.history.replaceState = function(state, unused, url) {
-      originalReplaceState.call(this, state, unused, url);
-      handleLocationChange();
-    };
-
-    window.addEventListener('popstate', handleLocationChange);
-
+    window.addEventListener('hashchange', handleHashChange);
     return () => {
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
-  const navigateTo = (newPath: string) => {
-    window.history.pushState({}, '', newPath);
+  const navigateTo = (newHash: string) => {
+    window.location.hash = newHash;
   };
 
   const [sogAStr, setSogAStr] = useState(() => localStorage.getItem('vmg_sogA') ?? '5.6');
@@ -329,8 +324,8 @@ export default function App() {
   const isStarboard = tack === 'starboard';
   const tackColorText = isStarboard ? 'text-emerald-400' : 'text-rose-400';
 
-  if (path === '/diagram') {
-    return <DiagramPage onBack={() => navigateTo('/')} />;
+  if (path === '#/diagram') {
+    return <DiagramPage onBack={() => navigateTo('#/')} />;
   }
 
   return (
@@ -361,7 +356,13 @@ export default function App() {
               </div>
             </div>
 
-            <div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateTo('#/diagram')}
+                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-xs uppercase tracking-wider transition-colors duration-200"
+              >
+                Diagram
+              </button>
               <button 
                 onClick={() => setTack(tack === 'port' ? 'starboard' : 'port')}
                 className={`w-24 py-1.5 rounded-lg font-black text-xs uppercase tracking-wider text-center transition-all duration-300 ${
