@@ -62,10 +62,12 @@ function BearingDiagram({ cogOffsetDeg, sogA, sogB, winner }: BearingDiagramProp
     const size = 6;
     const tipX = x;
     const tipY = y;
-    const l1x = tipX + size * Math.cos(r + 2.5);
-    const l1y = tipY + size * Math.sin(r + 2.5);
-    const l2x = tipX + size * Math.cos(r - 2.5);
-    const l2y = tipY + size * Math.sin(r - 2.5);
+    const headAngle = 0.6;
+    const back = r + Math.PI;
+    const l1x = tipX + size * Math.cos(back + headAngle);
+    const l1y = tipY + size * Math.sin(back + headAngle);
+    const l2x = tipX + size * Math.cos(back - headAngle);
+    const l2y = tipY + size * Math.sin(back - headAngle);
     return (
       <polygon
         points={`${tipX},${tipY} ${l1x},${l1y} ${l2x},${l2y}`}
