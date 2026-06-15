@@ -319,7 +319,9 @@ function ResultsBanner({
   const winnerProgress = winner === 'A' ? progressA : progressB;
   const directionNote =
     winner === 'B'
-      ? `Sailing ${Math.abs(cogOffsetDeg).toFixed(1)}° ${cogOffsetDeg > 0 ? 'higher' : 'lower'} is more efficient.`
+      ? cogOffsetDeg === 0
+        ? 'Sailing the same course but faster is more efficient.'
+        : `Sailing ${Math.abs(cogOffsetDeg).toFixed(1)}° ${cogOffsetDeg > 0 ? 'higher' : 'lower'} is more efficient.`
       : 'Sailing directly toward the mark is more efficient.';
 
   return (
