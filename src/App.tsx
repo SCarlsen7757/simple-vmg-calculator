@@ -29,7 +29,6 @@ function routeFromHash(hash: string): string {
 
 interface InputCardProps {
   title: string;
-  subtitle: string;
   sogValue: string;
   onSogChange: (v: string) => void;
   cogValue: string;
@@ -42,7 +41,6 @@ interface InputCardProps {
 
 function InputCard({
   title,
-  subtitle,
   sogValue,
   onSogChange,
   cogValue,
@@ -50,16 +48,13 @@ function InputCard({
   progress,
   isWinner,
   isEqual,
-  tack,
+  tack: _tack,
 }: InputCardProps) {
-  const isStarboard = tack === 'starboard';
   const highlight = isEqual
-    ? 'border-slate-500'
+    ? 'border-slate-700'
     : isWinner
-      ? isStarboard
-        ? 'border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
-        : 'border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.2)]'
-      : 'border-slate-700';
+      ? 'border-amber-400'
+      : 'border-slate-800';
 
   const handleSogDec = () => {
     const current = parseFloat(sogValue) || 0;
@@ -87,32 +82,29 @@ function InputCard({
 
   return (
     <div
-      className={`relative rounded-xl border-2 ${highlight} bg-slate-800 p-3 transition-all duration-300`}
+      className={`relative rounded-sm border ${highlight} bg-slate-950 p-2.5 transition-all duration-300`}
     >
       {isWinner && !isEqual && (
-        <span className={`absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full ${isStarboard ? 'bg-emerald-500' : 'bg-rose-500'} px-2 py-0.5 text-[9px] font-black text-white tracking-widest uppercase`}>
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-sm bg-amber-400 px-2 py-0.5 text-[9px] font-bold text-slate-950 tracking-widest uppercase">
           Best
         </span>
       )}
 
-      <div className="flex justify-between items-baseline mb-2">
-        <h3 className="text-xs font-black text-slate-200 tracking-tight">{title}</h3>
-        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
-          {subtitle}
-        </span>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <h3 className="text-xs font-mono font-semibold text-cyan-200 tracking-wide">{title}</h3>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {/* SOG input */}
         <div>
-          <span className="block text-[9px] text-slate-400 mb-0.5 font-bold uppercase tracking-wider">
-            SOG (kn)
+          <span className="block text-[9px] text-cyan-300/80 mb-0.5 font-mono font-semibold uppercase tracking-wide">
+            SOG (KN)
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={handleSogDec}
-              className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-black text-lg active:bg-slate-700 select-none hover:bg-slate-850 focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
             >
               -
             </button>
@@ -124,12 +116,12 @@ function InputCard({
               value={sogValue}
               onChange={(e) => onSogChange(e.target.value)}
               placeholder="0.0"
-              className="w-full h-9 text-center rounded-lg border border-slate-750 bg-slate-950 px-1 text-sm font-mono font-bold text-white placeholder-slate-700 focus:border-slate-500 focus:outline-none"
+              className="flex-1 min-w-0 h-10 sm:h-11 text-center rounded-sm border border-slate-700 bg-black px-1 text-base font-mono font-semibold text-slate-100 placeholder-slate-700 focus:border-magenta-400 focus:outline-none"
             />
             <button
               type="button"
               onClick={handleSogInc}
-              className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-black text-lg active:bg-slate-700 select-none hover:bg-slate-850 focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
             >
               +
             </button>
@@ -138,14 +130,14 @@ function InputCard({
 
         {/* COG input */}
         <div>
-          <span className="block text-[9px] text-slate-400 mb-0.5 font-bold uppercase tracking-wider">
+          <span className="block text-[9px] text-cyan-300/80 mb-0.5 font-mono font-semibold uppercase tracking-wide">
             COG (°)
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={handleCogDec}
-              className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-black text-lg active:bg-slate-700 select-none hover:bg-slate-850 focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
             >
               -
             </button>
@@ -158,12 +150,12 @@ function InputCard({
               value={cogValue}
               onChange={(e) => onCogChange(e.target.value)}
               placeholder="0"
-              className="w-full h-9 text-center rounded-lg border border-slate-750 bg-slate-950 px-1 text-sm font-mono font-bold text-white placeholder-slate-700 focus:border-slate-500 focus:outline-none"
+              className="flex-1 min-w-0 h-10 sm:h-11 text-center rounded-sm border border-slate-700 bg-black px-1 text-base font-mono font-semibold text-slate-100 placeholder-slate-700 focus:border-magenta-400 focus:outline-none"
             />
             <button
               type="button"
               onClick={handleCogInc}
-              className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-black text-lg active:bg-slate-700 select-none hover:bg-slate-850 focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
             >
               +
             </button>
@@ -172,12 +164,12 @@ function InputCard({
       </div>
 
       {/* Progress display */}
-      <div className="mt-2.5 rounded-lg bg-slate-950 px-2.5 py-1.5 flex items-center justify-between">
-        <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">
+      <div className="mt-2 rounded-sm border border-slate-800 bg-black px-2 py-1.5 flex items-center justify-between">
+        <span className="text-[9px] text-magenta-300/80 uppercase font-mono font-semibold tracking-wide">
           VMG Prog
         </span>
         <span
-          className={`text-sm font-mono font-bold ${isWinner && !isEqual ? (isStarboard ? 'text-emerald-400' : 'text-rose-400') : 'text-slate-400'}`}
+          className={`text-sm font-mono font-semibold ${isWinner && !isEqual ? 'text-amber-300' : 'text-slate-300'}`}
         >
           {fmt(progress)} kn
         </span>
@@ -207,19 +199,16 @@ function ResultsBanner({
   relativeDiff,
   tack,
 }: ResultsBannerProps) {
-  const isStarboard = tack === 'starboard';
   const borderHighlight = winner === 'equal'
-    ? 'border-slate-600'
-    : isStarboard
-      ? 'border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-      : 'border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.15)]';
+    ? 'border-slate-700'
+    : 'border-amber-400';
 
-  const textTheme = isStarboard ? 'text-emerald-400' : 'text-rose-400';
+  const textTheme = 'text-amber-300';
 
   if (winner === 'equal') {
     return (
-      <div className="rounded-xl border-2 border-slate-700 bg-slate-800 p-3 text-center">
-        <p className="text-base font-black text-white uppercase tracking-wider">Equal Performance</p>
+      <div className="rounded-sm border border-slate-700 bg-slate-950 p-2.5 text-center">
+        <p className="text-base font-mono font-semibold text-cyan-200 uppercase tracking-wide">Equal Performance</p>
         <p className="text-slate-400 text-xs mt-0.5 font-medium">
           Effective progress: <span className="font-mono font-bold text-white">{fmt(progressA)} kn</span> for both.
         </p>
@@ -242,21 +231,21 @@ function ResultsBanner({
   }
 
   return (
-    <div className={`rounded-xl border-2 ${borderHighlight} bg-slate-800 p-3.5 flex flex-col items-center justify-center text-center transition-all duration-300`}>
-      <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-0.5">
+    <div className={`rounded-sm border ${borderHighlight} bg-slate-950 p-2.5 flex flex-col items-center justify-center text-center transition-all duration-300`}>
+      <p className="text-[10px] uppercase tracking-wide text-magenta-300/80 font-mono font-semibold mb-0.5">
         Best Option
       </p>
-      <p className={`text-xl font-black uppercase tracking-tight ${textTheme}`}>
+      <p className={`text-xl font-mono font-semibold uppercase tracking-wide ${textTheme}`}>
         {winnerLabel}
       </p>
       <div className="mt-1 text-xs text-slate-300 space-y-0.5">
-        <p className="font-semibold">
-          VMG: <span className="font-mono text-white text-sm font-bold">{fmt(winnerProgress)} kn</span> 
-          <span className={`${textTheme} ml-2 font-bold`}>
+        <p className="font-mono font-semibold">
+          VMG: <span className="font-mono text-white text-sm font-semibold">{fmt(winnerProgress)} kn</span> 
+          <span className={`${textTheme} ml-2 font-semibold`}>
             (+{fmt(advantage)} kn / +{fmt(improvementPct, 1)}%)
           </span>
         </p>
-        <p className="text-slate-400 text-[10px] font-semibold italic uppercase tracking-wider mt-1">
+        <p className="text-slate-400 text-[10px] font-mono font-semibold italic uppercase tracking-wide mt-1">
           {advice}
         </p>
       </div>
@@ -322,7 +311,7 @@ export default function App() {
   );
 
   const isStarboard = tack === 'starboard';
-  const tackColorText = isStarboard ? 'text-emerald-400' : 'text-rose-400';
+  const tackIconText = 'text-cyan-300';
 
   if (path === '#/diagram') {
     return <DiagramPage onBack={() => navigateTo('#/')} />;
@@ -330,15 +319,15 @@ export default function App() {
 
   return (
 
-    <div className="min-h-svh bg-slate-900 text-white flex flex-col justify-between selection:bg-slate-700">
+    <div className="min-h-svh bg-black text-white flex flex-col justify-between selection:bg-cyan-800">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-md px-4 py-2 flex items-center justify-between">
+      <header className="border-b border-slate-800 bg-black/95 backdrop-blur sticky top-0 z-10">
+        <div className="mx-auto w-full max-w-lg px-2.5 py-2 flex items-center justify-between">
             <div className='flex items-center gap-2'>
               {/* Compass icon */}
               <svg
                 viewBox="0 0 24 24"
-                className={`w-6 h-6 ${tackColorText} shrink-0 transition-colors duration-300`}
+                className={`w-6 h-6 ${tackIconText} shrink-0 transition-colors duration-300`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -349,26 +338,26 @@ export default function App() {
                 <polygon points="4,12 12,14 20,12 12,10" fill="currentColor" stroke="none" />
               </svg>
               <div>
-                <h1 className="text-xs font-black text-white leading-none tracking-wider uppercase">
+                <h1 className="text-xs font-mono font-semibold text-cyan-200 leading-none tracking-wide uppercase">
                   VMG Calc
                 </h1>
-                <p className="text-[9px] text-slate-500 font-bold tracking-wider uppercase">Velocity Made Good</p>
+                <p className="text-[9px] text-magenta-300/80 font-mono font-semibold tracking-wide uppercase">Velocity Made Good</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateTo('#/diagram')}
-                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-xs uppercase tracking-wider transition-colors duration-200"
+                className="h-8 px-2.5 inline-flex items-center justify-center rounded-sm border border-slate-700 leading-none bg-black hover:bg-slate-950 text-cyan-200 font-mono font-semibold text-[11px] uppercase tracking-wide transition-colors duration-200 focus:outline-none focus:border-cyan-400"
               >
                 Diagram
               </button>
               <button 
                 onClick={() => setTack(tack === 'port' ? 'starboard' : 'port')}
-                className={`w-24 py-1.5 rounded-lg font-black text-xs uppercase tracking-wider text-center transition-all duration-300 ${
+                className={`w-24 h-8 inline-flex items-center justify-center rounded-sm border border-transparent leading-none font-mono font-semibold text-[11px] uppercase tracking-wide text-center transition-all duration-300 ${
                   isStarboard 
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/20 active:scale-95' 
-                    : 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/20 active:scale-95'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95' 
+                    : 'bg-rose-600 hover:bg-rose-500 text-white active:scale-95'
                 }`}
               >
                 {tack}
@@ -377,11 +366,10 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-md px-4 py-4 flex flex-col justify-start gap-3">
+      <main className="flex-1 mx-auto w-full max-w-lg px-2.5 py-2.5 flex flex-col justify-start gap-2">
         {/* Input cards */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-1.5">
           <InputCard
-            subtitle="Ref"
             title="Course A"
             sogValue={sogAStr}
             onSogChange={setSogAStr}
@@ -393,7 +381,6 @@ export default function App() {
             tack={tack}
           />
           <InputCard
-            subtitle="Rel"
             title="Course B"
             sogValue={sogBStr}
             onSogChange={setSogBStr}
@@ -419,8 +406,8 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-2 border-t border-slate-800 bg-slate-950/35">
-        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+      <footer className="text-center py-1.5 border-t border-slate-800 bg-black/80">
+        <p className="text-[9px] font-mono font-semibold text-cyan-300/65 uppercase tracking-wide">
           Mobile-First Tactical Sailing Tool
         </p>
       </footer>
