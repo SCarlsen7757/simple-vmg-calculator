@@ -263,6 +263,7 @@ export default function App() {
   const [cogAStr, setCogAStr] = useState(() => localStorage.getItem('vmg_cogA') ?? '247');
   const [cogBStr, setCogBStr] = useState(() => localStorage.getItem('vmg_cogB') ?? '249');
   const [tack, setTack] = useState<Tack>(() => (localStorage.getItem('vmg_tack') as Tack) ?? 'starboard');
+  const [tackAngleStr, setTackAngleStr] = useState(() => localStorage.getItem('vmg_tackAngle') ?? '90');
 
   useEffect(() => {
     localStorage.setItem('vmg_sogA', sogAStr);
@@ -284,22 +285,40 @@ export default function App() {
     localStorage.setItem('vmg_tack', tack);
   }, [tack]);
 
+  useEffect(() => {
+    localStorage.setItem('vmg_tackAngle', tackAngleStr);
+  }, [tackAngleStr]);
+
   const sogA = parsePositiveFloat(sogAStr);
   const sogB = parsePositiveFloat(sogBStr);
   const cogA = parsePositiveFloat(cogAStr);
   const cogB = parsePositiveFloat(cogBStr);
+  const tackAngle = Math.max(70, Math.min(115, parseInt(tackAngleStr) || 90));
+
+  const handleTackAngleDec = () => {
+    const current = parseInt(tackAngleStr) || 90;
+    const next = Math.max(70, current - 1);
+    setTackAngleStr(next.toString());
+  };
+
+  const handleTackAngleInc = () => {
+    const current = parseInt(tackAngleStr) || 90;
+    const next = Math.min(115, current + 1);
+    setTackAngleStr(next.toString());
+  };
 
   const result = calculateVmg(
     { sog: sogA, cog: cogA },
     { sog: sogB, cog: cogB },
-    tack
+    tack,
+    tackAngle
   );
 
   const isStarboard = tack === 'starboard';
   const tackIconText = 'text-cyan-300';
 
   if (path === '#/diagram') {
-    return <DiagramPage onBack={() => navigateTo('#/')} />;
+    return <DiagramPage tackAngle={tackAngle} onBack={() => navigateTo('#/')} />;
   }
 
   return (
@@ -374,6 +393,47 @@ export default function App() {
             isWinner={result.winner === 'B'}
             isEqual={result.winner === 'equal'}
           />
+        </div>
+
+        {/* Tack Angle Configuration */}
+        <div className="rounded-sm border border-slate-800 bg-slate-950 p-2.5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <span className="block text-[10px] text-cyan-300 font-mono font-semibold uppercase tracking-wide">
+                Tack Angle
+              </span>
+              <p className="text-[9px] text-slate-400 font-mono leading-tight mt-0.5">
+                Tack-to-tack angle (TWA = {(tackAngle / 2).toFixed(1)}°)
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleTackAngleDec}
+                className="w-10 h-10 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="70"
+                max="115"
+                step="1"
+                value={tackAngleStr}
+                onChange={(e) => setTackAngleStr(e.target.value)}
+                className="w-16 h-10 text-center rounded-sm border border-slate-700 bg-black text-base font-mono font-semibold text-white focus:border-magenta-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleTackAngleInc}
+                className="w-10 h-10 shrink-0 flex items-center justify-center rounded-sm border border-slate-700 bg-black text-cyan-200 font-mono font-semibold text-2xl leading-none active:bg-slate-900 select-none hover:text-cyan-100 focus:outline-none focus:border-cyan-400"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Results banner */}

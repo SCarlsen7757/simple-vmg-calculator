@@ -53,16 +53,18 @@ function QuickLookupTable({ className = '', tablePoints, baselineSog }: QuickLoo
 }
 
 interface DiagramPageProps {
+  tackAngle: number;
   onBack: () => void;
 }
 
-export default function DiagramPage({ onBack }: DiagramPageProps) {
+export default function DiagramPage({ tackAngle, onBack }: DiagramPageProps) {
   const [baselineSogStr, setBaselineSogStr] = useState('5.5');
   const [maxAngleStr, setMaxAngleStr] = useState('30'); // Default to 30, customizable from 10 to 45
 
   // Parse baseline SOG and max angle offset
   const baselineSog = Math.max(0.1, parseFloat(baselineSogStr) || 5.5);
   const maxAngle = Math.max(10, Math.min(45, parseInt(maxAngleStr) || 30));
+  const twaOpt = tackAngle / 2;
 
   // Setup graph limits
   const yMin = Math.max(0, baselineSog - 1.0);
@@ -73,7 +75,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
   const tablePoints: DiagramPoint[] = [];
 
   for (let angle = 0; angle <= maxAngle; angle++) {
-    const reqSog = calculateRequiredSog(baselineSog, angle);
+    const reqSog = calculateRequiredSog(baselineSog, angle, twaOpt);
     
     // Map to SVG coordinates:
     // Width = 600, Height = 400. Margins: Left = 60, Right = 30, Top = 40, Bottom = 50
@@ -88,7 +90,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
   const angleStep = maxAngle / 10;
   for (let i = 0; i <= 10; i++) {
     const angle = i * angleStep;
-    const reqSog = calculateRequiredSog(baselineSog, angle);
+    const reqSog = calculateRequiredSog(baselineSog, angle, twaOpt);
     tablePoints.push({ angle, requiredSog: reqSog });
   }
 
@@ -199,7 +201,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
                   {/* Baseline SOG Input */}
                   <div>
                     <span className="flex min-h-[2.25rem] items-end text-[10px] text-cyan-300/80 mb-1.5 font-mono font-semibold uppercase tracking-wide">
-                      Baseline SOG (KN) at 0° offset
+                      Baseline SOG (KN) at Close-Hauled (TWA = {twaOpt.toFixed(1)}°)
                     </span>
                     <div className="flex items-center gap-1.5 w-full">
                       <button
@@ -286,7 +288,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
               VMG SOG Target Reference Card
             </h2>
             <p className="text-xs font-mono font-semibold text-magenta-300/80 print:text-slate-800 mt-1 uppercase">
-              Baseline SOG: <span className="text-amber-300 print:text-black">{baselineSog.toFixed(1)} Knots</span> at 0° offset
+              Baseline SOG: <span className="text-amber-300 print:text-black">{baselineSog.toFixed(1)} Knots</span> (Tack: {tackAngle}°, TWA: {twaOpt.toFixed(1)}°)
             </p>
           </div>
 
