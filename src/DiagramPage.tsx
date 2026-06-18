@@ -1,22 +1,70 @@
 import { useState } from 'react';
+import { calculateRequiredSog, type DiagramPoint } from './vmg';
 
-// Interface for the angle/required SOG data point
-interface DiagramPoint {
-  angle: number;
-  requiredSog: number;
+interface QuickLookupTableProps {
+  className?: string;
+  tablePoints: DiagramPoint[];
+  baselineSog: number;
+}
+
+function QuickLookupTable({ className = '', tablePoints, baselineSog }: QuickLookupTableProps) {
+  return (
+    <div className={className}>
+      <h3 className="text-[10px] font-mono font-semibold text-magenta-300 print:text-slate-800 uppercase tracking-wide mb-1.5 lg:mb-1 text-center">
+        Quick Reference Table
+      </h3>
+      <div className="overflow-x-auto rounded-sm border border-slate-800 print:border-black print:border-collapse">
+        <table className="w-full text-left text-xs border-collapse font-mono">
+          <thead>
+            <tr className="bg-slate-950 border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wide text-cyan-300 print:bg-slate-100 print:border-b-2 print:border-black print:text-black">
+              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Offset (°)</th>
+              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Target SOG (kn)</th>
+              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Diff (kn)</th>
+              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Diff (%)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800 font-mono font-semibold text-slate-300 print:divide-y print:divide-slate-300 print:text-black">
+            {tablePoints.map((pt, idx) => {
+              const diffSog = pt.requiredSog - baselineSog;
+              const diffPct = (diffSog / baselineSog) * 100;
+              
+              return (
+                <tr key={`table-row-${idx}`} className="hover:bg-slate-950 print:hover:bg-transparent">
+                  <td className="p-2 lg:px-2 lg:py-1 text-center text-cyan-100 print:text-black font-semibold">
+                    {pt.angle % 1 === 0 ? pt.angle : pt.angle.toFixed(1)}°
+                  </td>
+                  <td className="p-2 lg:px-2 lg:py-1 text-center text-amber-300 print:text-black font-semibold">
+                    {pt.requiredSog.toFixed(2)} kn
+                  </td>
+                  <td className="p-2 lg:px-2 lg:py-1 text-center font-semibold text-magenta-300/80 print:text-black">
+                    {idx === 0 ? '-' : `+${diffSog.toFixed(2)} kn`}
+                  </td>
+                  <td className="p-2 lg:px-2 lg:py-1 text-center font-semibold text-magenta-300/80 print:text-black">
+                    {idx === 0 ? '-' : `+${diffPct.toFixed(1)}%`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 interface DiagramPageProps {
+  tackAngle: number;
   onBack: () => void;
 }
 
-export default function DiagramPage({ onBack }: DiagramPageProps) {
+export default function DiagramPage({ tackAngle, onBack }: DiagramPageProps) {
   const [baselineSogStr, setBaselineSogStr] = useState('5.5');
   const [maxAngleStr, setMaxAngleStr] = useState('30'); // Default to 30, customizable from 10 to 45
 
   // Parse baseline SOG and max angle offset
   const baselineSog = Math.max(0.1, parseFloat(baselineSogStr) || 5.5);
   const maxAngle = Math.max(10, Math.min(45, parseInt(maxAngleStr) || 30));
+  const twaOpt = tackAngle / 2;
 
   // Setup graph limits
   const yMin = Math.max(0, baselineSog - 1.0);
@@ -27,15 +75,13 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
   const tablePoints: DiagramPoint[] = [];
 
   for (let angle = 0; angle <= maxAngle; angle++) {
-    const radians = (angle * Math.PI) / 180;
-    const cosVal = Math.cos(radians);
-    const reqSog = cosVal > 0.01 ? baselineSog / cosVal : yMax;
+    const reqSog = calculateRequiredSog(baselineSog, angle, twaOpt);
     
     // Map to SVG coordinates:
     // Width = 600, Height = 400. Margins: Left = 60, Right = 30, Top = 40, Bottom = 50
     // Plot area: X in [60, 570], Y in [40, 350]
     const px = 60 + (angle / maxAngle) * 510;
-    const clampedReqSog = Math.min(reqSog, yMax);
+    const clampedReqSog = Math.min(reqSog || yMax, yMax);
     const py = 350 - ((clampedReqSog - yMin) / (yMax - yMin)) * 310;
     pathPoints.push(`${px.toFixed(1)},${py.toFixed(1)}`);
   }
@@ -44,8 +90,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
   const angleStep = maxAngle / 10;
   for (let i = 0; i <= 10; i++) {
     const angle = i * angleStep;
-    const radians = (angle * Math.PI) / 180;
-    const reqSog = baselineSog / Math.cos(radians);
+    const reqSog = calculateRequiredSog(baselineSog, angle, twaOpt);
     tablePoints.push({ angle, requiredSog: reqSog });
   }
 
@@ -106,51 +151,6 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
     const next = Math.min(45, current + 5);
     setMaxAngleStr(next.toString());
   };
-
-  const renderQuickLookupTable = (containerClassName: string) => (
-    <div className={containerClassName}>
-      <h3 className="text-[10px] font-mono font-semibold text-magenta-300 print:text-slate-800 uppercase tracking-wide mb-1.5 lg:mb-1 text-center">
-        Quick Reference Table
-      </h3>
-      <div className="overflow-x-auto rounded-sm border border-slate-800 print:border-black print:border-collapse">
-        <table className="w-full text-left text-xs border-collapse font-mono">
-          <thead>
-            <tr className="bg-slate-950 border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wide text-cyan-300 print:bg-slate-100 print:border-b-2 print:border-black print:text-black">
-              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Offset (°)</th>
-              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Target SOG (kn)</th>
-              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Diff (kn)</th>
-              <th className="p-2.5 lg:px-2 lg:py-1.5 text-center">Diff (%)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800 font-mono font-semibold text-slate-300 print:divide-y print:divide-slate-300 print:text-black">
-            {tablePoints.map((pt, idx) => {
-              const diffSog = pt.requiredSog - baselineSog;
-              const diffPct = (diffSog / baselineSog) * 100;
-              
-              return (
-                <tr key={`table-row-${idx}`} className="hover:bg-slate-950 print:hover:bg-transparent">
-                  <td className="p-2 lg:px-2 lg:py-1 text-center text-cyan-100 print:text-black font-semibold">
-                    {pt.angle % 1 === 0 ? pt.angle : pt.angle.toFixed(1)}°
-                  </td>
-                  <td className="p-2 lg:px-2 lg:py-1 text-center text-amber-300 print:text-black font-semibold">
-                    {pt.requiredSog.toFixed(2)} kn
-                  </td>
-                  <td className="p-2 lg:px-2 lg:py-1 text-center font-semibold text-magenta-300/80 print:text-black">
-                    {idx === 0 ? '-' : `+${diffSog.toFixed(2)} kn`}
-                  </td>
-                  <td className="p-2 lg:px-2 lg:py-1 text-center font-semibold text-magenta-300/80 print:text-black">
-                    {idx === 0 ? '-' : `+${diffPct.toFixed(1)}%`}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-
   return (
     <div className="min-h-svh bg-black text-white flex flex-col justify-between selection:bg-cyan-800 print:bg-white print:text-black">
       {/* Header */}
@@ -201,7 +201,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
                   {/* Baseline SOG Input */}
                   <div>
                     <span className="flex min-h-[2.25rem] items-end text-[10px] text-cyan-300/80 mb-1.5 font-mono font-semibold uppercase tracking-wide">
-                      Baseline SOG (KN) at 0° offset
+                      Baseline SOG (KN) at Close-Hauled (TWA = {twaOpt.toFixed(1)}°)
                     </span>
                     <div className="flex items-center gap-1.5 w-full">
                       <button
@@ -274,8 +274,8 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
               </div>
             </div>
 
-            <div className="rounded-sm border border-slate-800 bg-black p-3 lg:p-2.5">
-              {renderQuickLookupTable('')}
+            <div className="hidden lg:block rounded-sm border border-slate-800 bg-black p-3 lg:p-2.5">
+              <QuickLookupTable tablePoints={tablePoints} baselineSog={baselineSog} />
             </div>
           </div>
 
@@ -288,7 +288,7 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
               VMG SOG Target Reference Card
             </h2>
             <p className="text-xs font-mono font-semibold text-magenta-300/80 print:text-slate-800 mt-1 uppercase">
-              Baseline SOG: <span className="text-amber-300 print:text-black">{baselineSog.toFixed(1)} Knots</span> at 0° offset
+              Baseline SOG: <span className="text-amber-300 print:text-black">{baselineSog.toFixed(1)} Knots</span> (Tack: {tackAngle}°, TWA: {twaOpt.toFixed(1)}°)
             </p>
           </div>
 
@@ -466,7 +466,11 @@ export default function DiagramPage({ onBack }: DiagramPageProps) {
           </div>
 
           {/* Quick Lookup Data Table */}
-          {renderQuickLookupTable('mt-4 lg:hidden print:block print:mt-4')}
+          <QuickLookupTable
+            className="mt-4 lg:hidden print:block print:mt-4"
+            tablePoints={tablePoints}
+            baselineSog={baselineSog}
+          />
 
         </div>
         </div>

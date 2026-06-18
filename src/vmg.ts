@@ -1,13 +1,13 @@
 /**
  * VMG (Velocity Made Good) calculation utilities.
  *
- * Dataset A is treated as the baseline (0° offset).
- * Progress of B relative to A is calculated as:
- *   progressB = SOG_B × cos(COG_B - COG_A)
+ * VMG is calculated relative to the estimated wind direction using a baseline
+ * close-hauled tack-to-tack angle. The higher course is assumed to be close-hauled
+ * at an optimal True Wind Angle (TWA_opt = tackAngle / 2). The lower course is
+ * then evaluated at this TWA_opt plus the course angle offset.
  */
 
-export const Tacks = ['port', 'starboard'] as const;
-export type Tack = typeof Tacks[number];
+export type Tack = 'port' | 'starboard';
 
 export interface Dataset {
   sog: number;
@@ -23,6 +23,8 @@ export interface VmgResult {
   /** Percentage improvement of the winner over the loser (always ≥ 0). */
   improvementPct: number;
   relativeDiff: number;
+  /** User-friendly explanation of performance and recommended action. */
+  advice: string;
 }
 
 export function getRelativeAngleDifference(cogB: number, cogA: number): number {
@@ -31,9 +33,23 @@ export function getRelativeAngleDifference(cogB: number, cogA: number): number {
   return diff;
 }
 
-export function calculateVmg(a: Dataset, b: Dataset, tack: Tack): VmgResult {
+/**
+ * Calculates the required SOG at a given angle offset to maintain the same VMG
+ * as the baseline SOG.
+ *
+ * Formula: SOG_req = SOG_baseline * cos(twaOpt) / cos(twaOpt + angleOffset)
+ */
+export function calculateRequiredSog(baselineSog: number, angleOffset: number, twaOpt: number): number {
+  const radBaseline = (twaOpt * Math.PI) / 180;
+  const radTarget = ((twaOpt + angleOffset) * Math.PI) / 180;
+  const cosBaseline = Math.cos(radBaseline);
+  const cosTarget = Math.cos(radTarget);
+  return cosTarget > 0.01 ? (baselineSog * cosBaseline) / cosTarget : 0;
+}
+
+export function calculateVmg(a: Dataset, b: Dataset, tack: Tack, tackAngle: number): VmgResult {
   const relativeDiff = getRelativeAngleDifference(b.cog, a.cog);
-  const radians = (relativeDiff * Math.PI) / 180;
+  const twaOpt = tackAngle / 2;
 
   // Determine which course is sailing "higher" (closer to the wind)
   let isBHigher: boolean;
@@ -45,21 +61,35 @@ export function calculateVmg(a: Dataset, b: Dataset, tack: Tack): VmgResult {
     isBHigher = relativeDiff < 0;
   }
 
-  let progressA: number;
-  let progressB: number;
+
+
+  // Calculate TWAs for both courses
+  let twaA: number;
+  let twaB: number;
 
   if (relativeDiff === 0) {
-    progressA = a.sog;
-    progressB = b.sog;
+    twaA = twaOpt;
+    twaB = twaOpt;
   } else if (isBHigher) {
-    // B is sailing higher (baseline 0 offset for B)
-    progressB = b.sog;
-    progressA = a.sog * Math.cos(radians);
+    // B is sailing higher (so B is at twaOpt)
+    twaB = twaOpt;
+    twaA = twaOpt + Math.abs(relativeDiff);
   } else {
-    // A is sailing higher (baseline 0 offset for A)
-    progressA = a.sog;
-    progressB = b.sog * Math.cos(radians);
+    // A is sailing higher (so A is at twaOpt)
+    twaA = twaOpt;
+    twaB = twaOpt + Math.abs(relativeDiff);
   }
+
+  // Calculate VMG progress relative to the wind
+  const radA = (twaA * Math.PI) / 180;
+  const radB = (twaB * Math.PI) / 180;
+
+  // cos of TWA is capped at 0 (negative progress means sailing away/downwind, which is 0 upwind VMG)
+  const cosA = Math.cos(radA);
+  const cosB = Math.cos(radB);
+
+  const progressA = cosA > 0.001 ? a.sog * cosA : 0;
+  const progressB = cosB > 0.001 ? b.sog * cosB : 0;
 
   const diff = progressB - progressA;
   const advantage = Math.abs(diff);
@@ -75,7 +105,24 @@ export function calculateVmg(a: Dataset, b: Dataset, tack: Tack): VmgResult {
     winner = 'A';
   }
 
-  return { progressA, progressB, winner, advantage, improvementPct, relativeDiff };
+  // Generate tactical advice based on relative course difference and tack
+  let advice: string;
+  if (relativeDiff !== 0) {
+    const isBRightOfA = relativeDiff > 0;
+    const side = tack === 'starboard' 
+      ? (isBRightOfA ? 'higher' : 'lower') 
+      : (isBRightOfA ? 'lower' : 'higher');
+    
+    if (twaA >= 90 || twaB >= 90) {
+      advice = `B sails ${Math.abs(relativeDiff).toFixed(0)}° ${side} than A (sailing past beam reach).`;
+    } else {
+      advice = `B sails ${Math.abs(relativeDiff).toFixed(0)}° ${side} than A.`;
+    }
+  } else {
+    advice = 'Courses are parallel.';
+  }
+
+  return { progressA, progressB, winner, advantage, improvementPct, relativeDiff, advice };
 }
 
 export interface DiagramPoint {
@@ -83,20 +130,5 @@ export interface DiagramPoint {
   requiredSog: number;
 }
 
-/**
- * Calculates the required SOG at different angle offsets (0 to maxAngle degrees)
- * to maintain the same VMG as the baseline SOG at 0 degrees offset.
- * SOG_req = SOG_baseline / cos(angle)
- */
-export function calculateDiagramData(baselineSog: number, maxAngle = 45, step = 5): DiagramPoint[] {
-  const points: DiagramPoint[] = [];
-  for (let angle = 0; angle <= maxAngle; angle += step) {
-    const radians = (angle * Math.PI) / 180;
-    // Handle cos(90) edge cases, though maxAngle is usually 45
-    const cosVal = Math.cos(radians);
-    const requiredSog = cosVal > 0.01 ? baselineSog / cosVal : 0;
-    points.push({ angle, requiredSog });
-  }
-  return points;
-}
+
 
