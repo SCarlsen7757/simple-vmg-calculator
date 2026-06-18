@@ -358,7 +358,7 @@ export default function App() {
               </button>
               <button 
                 onClick={() => setTack(tack === 'port' ? 'starboard' : 'port')}
-                className={`w-24 h-8 inline-flex items-center justify-center rounded-sm border border-transparent leading-none font-mono font-semibold text-[11px] uppercase tracking-wide text-center transition-all duration-300 ${
+                className={`max-sm:hidden w-24 h-8 inline-flex items-center justify-center rounded-sm border border-transparent leading-none font-mono font-semibold text-[11px] uppercase tracking-wide text-center transition-all duration-300 ${
                   isStarboard 
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95' 
                     : 'bg-rose-600 hover:bg-rose-500 text-white active:scale-95'
@@ -370,30 +370,16 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-lg px-2.5 py-2.5 flex flex-col justify-start gap-2">
-        {/* Input cards */}
-        <div className="grid grid-cols-2 gap-1.5">
-          <InputCard
-            title="Course A"
-            sogValue={sogAStr}
-            onSogChange={setSogAStr}
-            cogValue={cogAStr}
-            onCogChange={setCogAStr}
-            progress={result.progressA}
-            isWinner={result.winner === 'A'}
-            isEqual={result.winner === 'equal'}
-          />
-          <InputCard
-            title="Course B"
-            sogValue={sogBStr}
-            onSogChange={setSogBStr}
-            cogValue={cogBStr}
-            onCogChange={setCogBStr}
-            progress={result.progressB}
-            isWinner={result.winner === 'B'}
-            isEqual={result.winner === 'equal'}
-          />
-        </div>
+      <main className="flex-1 mx-auto w-full sm:max-w-lg px-2.5 py-2.5 pb-18 sm:pb-2.5 flex flex-col justify-end sm:justify-start gap-2">
+        {/* Results banner */}
+        <ResultsBanner
+          winner={result.winner}
+          advantage={result.advantage}
+          improvementPct={result.improvementPct}
+          progressA={result.progressA}
+          progressB={result.progressB}
+          advice={result.advice}
+        />
 
         {/* Tack Angle Configuration */}
         <div className="rounded-sm border border-slate-800 bg-slate-950 p-2.5">
@@ -436,19 +422,47 @@ export default function App() {
           </div>
         </div>
 
-        {/* Results banner */}
-        <ResultsBanner
-          winner={result.winner}
-          advantage={result.advantage}
-          improvementPct={result.improvementPct}
-          progressA={result.progressA}
-          progressB={result.progressB}
-          advice={result.advice}
-        />
+        {/* Input cards */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <InputCard
+            title="Course A"
+            sogValue={sogAStr}
+            onSogChange={setSogAStr}
+            cogValue={cogAStr}
+            onCogChange={setCogAStr}
+            progress={result.progressA}
+            isWinner={result.winner === 'A'}
+            isEqual={result.winner === 'equal'}
+          />
+          <InputCard
+            title="Course B"
+            sogValue={sogBStr}
+            onSogChange={setSogBStr}
+            cogValue={cogBStr}
+            onCogChange={setCogBStr}
+            progress={result.progressB}
+            isWinner={result.winner === 'B'}
+            isEqual={result.winner === 'equal'}
+          />
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-1.5 border-t border-slate-800 bg-black/80">
+      {/* Sticky bottom TACK button — mobile only */}
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-20 p-2.5 bg-black/95 backdrop-blur border-t border-slate-800">
+        <button
+          onClick={() => setTack(tack === 'port' ? 'starboard' : 'port')}
+          className={`w-full h-12 flex items-center justify-center rounded-sm border border-transparent font-mono font-bold text-sm uppercase tracking-widest transition-all duration-300 ${
+            isStarboard
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.98]'
+              : 'bg-rose-600 hover:bg-rose-500 text-white active:scale-[0.98]'
+          }`}
+        >
+          Tack: {tack}
+        </button>
+      </div>
+
+      {/* Footer — hidden on mobile to make room for sticky TACK button */}
+      <footer className="max-sm:hidden text-center py-1.5 border-t border-slate-800 bg-black/80">
         <p className="text-[9px] font-mono font-semibold text-cyan-300/65 uppercase tracking-wide">
           Mobile-First Tactical Sailing Tool
         </p>
