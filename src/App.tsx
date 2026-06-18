@@ -36,7 +36,6 @@ interface InputCardProps {
   progress: number;
   isWinner: boolean;
   isEqual: boolean;
-  tack: Tack;
 }
 
 function InputCard({
@@ -48,7 +47,6 @@ function InputCard({
   progress,
   isWinner,
   isEqual,
-  tack: _tack,
 }: InputCardProps) {
   const highlight = isEqual
     ? 'border-slate-700'
@@ -186,8 +184,7 @@ interface ResultsBannerProps {
   improvementPct: number;
   progressA: number;
   progressB: number;
-  relativeDiff: number;
-  tack: Tack;
+  advice: string;
 }
 
 function ResultsBanner({
@@ -196,8 +193,7 @@ function ResultsBanner({
   improvementPct,
   progressA,
   progressB,
-  relativeDiff,
-  tack,
+  advice,
 }: ResultsBannerProps) {
   const borderHighlight = winner === 'equal'
     ? 'border-slate-700'
@@ -218,17 +214,6 @@ function ResultsBanner({
 
   const winnerLabel = winner === 'A' ? 'Course A' : 'Course B';
   const winnerProgress = winner === 'A' ? progressA : progressB;
-
-  const isBRightOfA = relativeDiff > 0;
-  let advice: string;
-  if (relativeDiff !== 0) {
-    const side = tack === 'starboard' 
-      ? (isBRightOfA ? 'higher' : 'lower') 
-      : (isBRightOfA ? 'lower' : 'higher');
-    advice = `B sails ${Math.abs(relativeDiff).toFixed(0)}° ${side} than A.`;
-  } else {
-    advice = 'Courses are parallel.';
-  }
 
   return (
     <div className={`rounded-sm border ${borderHighlight} bg-slate-950 p-2.5 flex flex-col items-center justify-center text-center transition-all duration-300`}>
@@ -378,7 +363,6 @@ export default function App() {
             progress={result.progressA}
             isWinner={result.winner === 'A'}
             isEqual={result.winner === 'equal'}
-            tack={tack}
           />
           <InputCard
             title="Course B"
@@ -389,7 +373,6 @@ export default function App() {
             progress={result.progressB}
             isWinner={result.winner === 'B'}
             isEqual={result.winner === 'equal'}
-            tack={tack}
           />
         </div>
 
@@ -400,8 +383,7 @@ export default function App() {
           improvementPct={result.improvementPct}
           progressA={result.progressA}
           progressB={result.progressB}
-          relativeDiff={result.relativeDiff}
-          tack={tack}
+          advice={result.advice}
         />
       </main>
 

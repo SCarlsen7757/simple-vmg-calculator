@@ -6,8 +6,7 @@
  *   progressB = SOG_B × cos(COG_B - COG_A)
  */
 
-export const Tacks = ['port', 'starboard'] as const;
-export type Tack = typeof Tacks[number];
+export type Tack = 'port' | 'starboard';
 
 export interface Dataset {
   sog: number;
@@ -23,12 +22,26 @@ export interface VmgResult {
   /** Percentage improvement of the winner over the loser (always ≥ 0). */
   improvementPct: number;
   relativeDiff: number;
+  /** User-friendly explanation of performance and recommended action. */
+  advice: string;
 }
 
 export function getRelativeAngleDifference(cogB: number, cogA: number): number {
   let diff = (cogB - cogA + 180) % 360 - 180;
   if (diff < -180) diff += 360;
   return diff;
+}
+
+/**
+ * Calculates the required SOG at a given angle offset to maintain the same VMG
+ * as the baseline SOG at 0 degrees offset.
+ *
+ * Formula: SOG_req = SOG_baseline / cos(angle)
+ */
+export function calculateRequiredSog(baselineSog: number, angleOffset: number): number {
+  const radians = (angleOffset * Math.PI) / 180;
+  const cosVal = Math.cos(radians);
+  return cosVal > 0.01 ? baselineSog / cosVal : 0;
 }
 
 export function calculateVmg(a: Dataset, b: Dataset, tack: Tack): VmgResult {
@@ -75,7 +88,19 @@ export function calculateVmg(a: Dataset, b: Dataset, tack: Tack): VmgResult {
     winner = 'A';
   }
 
-  return { progressA, progressB, winner, advantage, improvementPct, relativeDiff };
+  // Generate tactical advice based on relative course difference and tack
+  let advice: string;
+  if (relativeDiff !== 0) {
+    const isBRightOfA = relativeDiff > 0;
+    const side = tack === 'starboard' 
+      ? (isBRightOfA ? 'higher' : 'lower') 
+      : (isBRightOfA ? 'lower' : 'higher');
+    advice = `B sails ${Math.abs(relativeDiff).toFixed(0)}° ${side} than A.`;
+  } else {
+    advice = 'Courses are parallel.';
+  }
+
+  return { progressA, progressB, winner, advantage, improvementPct, relativeDiff, advice };
 }
 
 export interface DiagramPoint {
@@ -83,20 +108,5 @@ export interface DiagramPoint {
   requiredSog: number;
 }
 
-/**
- * Calculates the required SOG at different angle offsets (0 to maxAngle degrees)
- * to maintain the same VMG as the baseline SOG at 0 degrees offset.
- * SOG_req = SOG_baseline / cos(angle)
- */
-export function calculateDiagramData(baselineSog: number, maxAngle = 45, step = 5): DiagramPoint[] {
-  const points: DiagramPoint[] = [];
-  for (let angle = 0; angle <= maxAngle; angle += step) {
-    const radians = (angle * Math.PI) / 180;
-    // Handle cos(90) edge cases, though maxAngle is usually 45
-    const cosVal = Math.cos(radians);
-    const requiredSog = cosVal > 0.01 ? baselineSog / cosVal : 0;
-    points.push({ angle, requiredSog });
-  }
-  return points;
-}
+
 
